@@ -242,6 +242,9 @@ SELECT CNPJ FROM Empresas WHERE dbo.ValidaCNPJAlfanumerico(CNPJ) = 0;
 A chegada dos CNPJs alfanuméricos é uma mudança **inevitável e impactante**. Adaptar seus sistemas com **antecedência** é fundamental para:
 
 ✅ Evitar falhas críticas
+
 ✅ Garantir conformidade fiscal
+
 ✅ Preservar a integridade dos dados
+
 ✅ Manter a operação e integração fluídas
