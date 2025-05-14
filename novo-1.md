@@ -1,55 +1,61 @@
-# 🆕 CNPJ Alfanumérico (2026): Guia Completo de Adaptação
+# CNPJ - Tax Id - New Alphanumeric CNPJ (2026) – Adaptations and Guidelines
 
 ---
 
-## 📅 1. Cronograma Oficial
+## 📅 1. Official Timeline of the Change
 
-| Etapa                                   | Data              |
-| --------------------------------------- | ----------------- |
-| Publicação da IN RFB nº 2.229           | 15/10/2024        |
-| Início da vigência                      | 25/10/2024        |
-| CNPJs com letras começam a ser emitidos | **Julho de 2026** |
+| Stage                           | Date             |
+| ------------------------------- | ---------------- |
+| Publication of IN RFB No. 2.229 | October 15, 2024 |
+| Effective date                  | October 25, 2024 |
+| Alphanumeric CNPJs issued from  | **July 2026**    |
 
-🔗 Fonte: [gov.br/receitafederal](https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2024/outubro/cnpj-tera-letras-e-numeros-a-partir-de-julho-de-2026)
-
----
-
-## 🧾 2. Estrutura do CNPJ
-
-### 🔹 **Formato Atual (até julho de 2026)**
-
-* **14 dígitos numéricos**: `NNNNNNNNNNNNNN`
-
-  * Raiz: 8 dígitos
-  * Estabelecimento: 4 dígitos
-  * DV: 2 dígitos verificadores
-
-### 🔸 **Formato Futuro (a partir de julho de 2026)**
-
-* **12 caracteres alfanuméricos (A–Z, 0–9)** + **2 dígitos verificadores**
-* DV calculado com base nos valores ASCII das letras
+> Official source: Receita Federal do Brasil
+> Link: [gov.br/receitafederal](https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2024/outubro/cnpj-tera-letras-e-numeros-a-partir-de-julho-de-2026)
 
 ---
 
-## 🧮 3. Algoritmo Unificado de Validação (Python)
+## 🧾 2. CNPJ Structure
+
+### 🟦 **Current Format (until 2026)**
+
+* **14 numeric digits**: NNNNNNNNNNNNNN
+
+  * Root: 8 digits
+  * Branch: 4 digits (e.g., 0001 = headquarters)
+  * Check digits: 2 digits
+
+### 🟩 **Future Format (from July 2026)**
+
+* **12 alphanumeric characters** + **2 check digits**
+
+  * Characters A–Z and digits 0–9 allowed
+  * Check digits based on ASCII value calculations
+
+---
+
+## 🔢 3. Unified Validation Algorithm (Python)
+
+This algorithm validates **both numeric and alphanumeric CNPJs**:
 
 ```python
 def char_to_val(c):
     if c.isdigit():
         return int(c)
-    return ord(c.upper()) - 55  # A=10, B=11, ..., Z=35
+    else:
+        return ord(c.upper()) - 55  # A=10, B=11, ..., Z=35
 
 def calcula_dv_alfanumerico(cnpj_base: str) -> str:
-    def calc_dv(cnpj, pesos):
-        soma = sum(char_to_val(c) * p for c, p in zip(cnpj, pesos))
-        resto = soma % 11
-        return '0' if resto < 2 else str(11 - resto)
+    def calc_dv(cnpj, weights):
+        total = sum(char_to_val(c) * w for c, w in zip(cnpj, weights))
+        remainder = total % 11
+        return '0' if remainder < 2 else str(11 - remainder)
 
-    pesos_1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
-    pesos_2 = [6] + pesos_1
+    weights_1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+    weights_2 = [6] + weights_1
 
-    dv1 = calc_dv(cnpj_base, pesos_1)
-    dv2 = calc_dv(cnpj_base + dv1, pesos_2)
+    dv1 = calc_dv(cnpj_base, weights_1)
+    dv2 = calc_dv(cnpj_base + dv1, weights_2)
 
     return dv1 + dv2
 
@@ -61,190 +67,256 @@ def valida_cnpj(cnpj: str) -> bool:
 
 ---
 
-## 🧪 4. Exemplos de Validação
+## 🧪 4. Validation Examples (Old and New)
 
-| Tipo   | CNPJ Base (12) | DV | Completo         | Válido |
-| ------ | -------------- | -- | ---------------- | ------ |
-| Antigo | 123456780001   | 95 | 12345678000195   | ✅      |
-| Antigo | 000000000001   | 91 | 00000000000191   | ✅      |
-| Novo   | A1B2C3D4E5F600 | 70 | A1B2C3D4E5F60070 | ✅      |
-| Novo   | BRASIL000001   | 91 | BRASIL00000191   | ✅      |
-| Novo   | ALFA001BR002   | 86 | ALFA001BR00286   | ✅      |
+| Type | Base CNPJ (12) | Expected DV | Full CNPJ        | Valid? |
+| ---- | -------------- | ----------- | ---------------- | ------ |
+| Old  | 123456780001   | 95          | 12345678000195   | ✅      |
+| Old  | 000000000001   | 91          | 00000000000191   | ✅      |
+| Old  | 111111110001   | 91          | 11111111000191   | ✅      |
+| Old  | 999999990001   | 91          | 99999999000191   | ✅      |
+| Old  | 101010100001   | 00          | 10101010000100   | ✅      |
+| New  | A1B2C3D4E5F600 | 70          | A1B2C3D4E5F60070 | ✅      |
+| New  | Z9Y8X7W6V5U400 | 27          | Z9Y8X7W6V5U40027 | ✅      |
+| New  | BRASIL000001   | 91          | BRASIL00000191   | ✅      |
+| New  | GOVBR1230001   | 63          | GOVBR123000163   | ✅      |
+| New  | ALFA001BR002   | 86          | ALFA001BR00286   | ✅      |
 
----
+### 🧪 Test Code
 
-## 🛠️ 5. Orientações para Adaptação de Sistemas
+```python
+samples = [
+    "12345678000195",  # Old
+    "00000000000191",
+    "11111111000191",
+    "99999999000191",
+    "10101010000100",
+    "A1B2C3D4E5F60070",  # New
+    "Z9Y8X7W6V5U40027",
+    "BRASIL00000191",
+    "GOVBR123000163",
+    "ALFA001BR00286",
+]
 
-### 🔸 5.1 Estruturas de Dados
-
-| Componente             | Ação recomendada                                           |
-| ---------------------- | ---------------------------------------------------------- |
-| **Banco de Dados**     | Mude de `INT`, `NUMERIC` ou `CHAR(14)` para `VARCHAR(14)`  |
-| **Inputs/Formulários** | Permitir letras A–Z                                        |
-| **Máscaras**           | Atualizar para `************-**`                           |
-| **APIs**               | Validar e aceitar alfanuméricos em contratos de integração |
-| **PKs/Índices**        | Evite usar CNPJ como chave se for tipo numérico            |
-
----
-
-### 🔸 5.2 Validadores
-
-**Antigos validadores numéricos deixarão de funcionar.**
-➡️ Adote o **validador unificado** com `char_to_val()`.
-
----
-
-### 🔸 5.3 Integrações
-
-Audite sistemas como: SEFAZ, eSocial, SPED, ERPs, bancos, certificados digitais.
-
-**Ações:**
-
-* Contato técnico com terceiros
-* Versão de API com suporte duplo
-* Logs e fallback temporário
+for cnpj in samples:
+    print(f"CNPJ: {cnpj} => Valid? {valida_cnpj(cnpj)}")
+```
 
 ---
 
-### 🔸 5.4 Relatórios e BI
+## ✅ 5. Conclusions
 
-Problemas possíveis:
-
-* Ordenação incorreta (alfanumérico ≠ numérico)
-* Filtros incompletos
-
-**Soluções:**
-
-* Use `VARCHAR(14)`
-* Revise regras de ETL, agrupamentos e dashboards
+* 🔁 The unified algorithm supports **both old and new formats**
+* 🧠 Letters are converted using **ASCII-based logic**
+* 🧩 Systems must be updated to accept **alphanumeric CNPJs**
+* 📌 **Existing CNPJs remain valid and unchanged**
 
 ---
 
-### 🔸 5.5 Boas Práticas
-
-| Ação                         | Objetivo                              |
-| ---------------------------- | ------------------------------------- |
-| Ambiente de testes           | Validar CNPJs com letras              |
-| Validação dupla              | Comparar nova e antiga regra          |
-| Logs e monitoramento         | Rastrear erros por tipagem/validação  |
-| Documentação técnica interna | Disseminar entendimento e uso correto |
+## 🛠️ Guidelines for Legacy System Adaptation
 
 ---
 
-## 🚨 6. Riscos e Soluções
+### 🟧 1. **Check and Update Data Structures**
 
-| Sintoma                   | Causa Provável                     | Solução                          |
-| ------------------------- | ---------------------------------- | -------------------------------- |
-| CNPJs válidos rejeitados  | Tipagem errada ou validador antigo | Use novo algoritmo + VARCHAR(14) |
-| Integrações quebradas     | Terceiros não atualizados          | Contato técnico e fallback       |
-| Relatórios inconsistentes | Agrupamento numérico               | Corrigir ETL e BI                |
-| Ordenação incorreta       | Ordenação numérica aplicada        | Adotar lógica alfanumérica       |
-
----
-
-## ✅ 7. Ações Prioritárias
-
-1. Alterar colunas para `VARCHAR(14)`
-2. Atualizar máscaras e validadores
-3. Auditar integrações externas
-4. Incluir testes automatizados com CNPJs alfanuméricos
-5. Treinar equipe e atualizar documentação
+| Element            | Action                                                                          |
+| ------------------ | ------------------------------------------------------------------------------- |
+| Database           | Change INT, BIGINT, NUMERIC, DECIMAL, CHAR(14) to VARCHAR(14)                   |
+| Forms / Inputs     | Allow A–Z letters (ASCII-based validation)                                      |
+| Masks / Formatting | Update to \*\*\*\*\*\*\*\*\*\***-**, allowing letters in the first 12 positions |
+| APIs / Interfaces  | Accept alphanumeric strings                                                     |
+| Indexes / PKs      | Avoid using CNPJ as PK if still stored as number                                |
 
 ---
 
-## 🧩 8. SQL Server: Adaptação Técnica
+### 🟧 2. **Update Check Digit Validators**
 
-### 🔹 8.1 Encontrar Colunas com CNPJ
+Old validators assume **only numbers**. Replace them with the new unified ASCII-aware logic.
+
+---
+
+### 🟧 3. **Audit and Update Third-Party Integrations**
+
+| Item                    | Considerations                                                |
+| ----------------------- | ------------------------------------------------------------- |
+| APIs, ERPs, CRMs, SEFAZ | May expect numeric-only CNPJs                                 |
+| Certificates            | May link authorizations to old format                         |
+| Solutions               | Request technical updates, maintain logs, implement fallbacks |
+
+---
+
+### 🟧 4. **Impact on Reports and BI**
+
+* Numeric assumptions in filters or grouping may break
+* Refactor dashboards and reports to handle VARCHAR(14)
+* Normalize alphanumeric data in ETLs and queries
+
+---
+
+### 🟧 5. **Best Practices for a Safe Transition**
+
+| Practice               | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| 🧪 Testing environment | Simulate alphanumeric CNPJs in dev/test databases      |
+| 🔐 Dual validation     | Temporarily validate with both old and new algorithms  |
+| 📊 Monitoring          | Track rejections or validation failures                |
+| 🔄 API versioning      | Version APIs and contracts for phased rollout          |
+| 📚 Documentation       | Update coding policies, user manuals, integration docs |
+
+---
+
+## 🚨 Potential Risks and Warning Signs
+
+| Symptom                | Cause                                | Suggested Fix                         |
+| ---------------------- | ------------------------------------ | ------------------------------------- |
+| Rejected valid CNPJs   | Improper type or outdated validation | Use unified validator and VARCHAR     |
+| Integration failures   | Partner systems not adapted          | Contact providers, implement fallback |
+| Sort/filter errors     | Numeric sort on alphanumerics        | Refactor queries and logic            |
+| Report inconsistencies | Non-numeric CNPJs excluded           | Normalize and include all formats     |
+
+---
+
+### ✅ Summary of Top Priority Actions
+
+1. **Change all fields to VARCHAR(14)**
+2. **Use the unified ASCII-aware validator**
+3. **Update all forms, masks, logs**
+4. **Audit and alert integrations**
+5. **Automate tests using alphanumeric samples**
+6. **Document and train your IT team**
+
+---
+
+# 🧩 Adapting SQL Server for Alphanumeric CNPJ
+
+---
+
+## 🛠️ 1. Identify Current Structures
+
+Find columns with INT, BIGINT, NUMERIC, or CHAR(14) formats that restrict input to numbers.
+
+### 🔍 Example query:
 
 ```sql
-SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE
+SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE COLUMN_NAME LIKE '%CNPJ%';
 ```
 
 ---
 
-### 🔹 8.2 Alterar Tipagem para VARCHAR(14)
+## 🔄 2. Change Column Types
+
+Convert numeric or fixed-format fields to `VARCHAR(14)`:
 
 ```sql
-ALTER TABLE Empresas
+ALTER TABLE Companies
 ALTER COLUMN CNPJ VARCHAR(14);
 ```
 
-> ⚠️ Remova qualquer `CHECK CONSTRAINT` que valide apenas dígitos.
+> ⚠️ Also remove or adjust constraints enforcing numeric-only formats.
 
 ---
 
-### 🔹 8.3 UDF para Validação de CNPJ (ASCII-aware)
+## 🧹 3. Remove Old Masks or Format Triggers
 
 ```sql
-CREATE FUNCTION dbo.ValidaCNPJAlfanumerico (@cnpj VARCHAR(14))
+-- Drop triggers or UDFs applying "NN.NNN.NNN/NNNN-NN"
+DROP TRIGGER tr_format_cnpj;
+```
+
+---
+
+## 🔒 4. Create Updated Validator Function (ASCII-aware)
+
+Here’s a SQL Server UDF for validating alphanumeric CNPJs:
+
+```sql
+CREATE FUNCTION dbo.ValidateCNPJAlpha (@cnpj VARCHAR(14))
 RETURNS BIT
 AS
 BEGIN
-    DECLARE @i INT = 1, @char CHAR(1), @val INT, @soma1 INT = 0, @soma2 INT = 0
-    DECLARE @pesos1 TABLE (pos INT, peso INT)
-    DECLARE @pesos2 TABLE (pos INT, peso INT)
+    DECLARE @i INT = 1, @char CHAR(1), @val INT, @sum1 INT = 0, @sum2 INT = 0
+    DECLARE @weights1 TABLE (pos INT, weight INT)
+    DECLARE @weights2 TABLE (pos INT, weight INT)
 
-    INSERT INTO @pesos1 VALUES (1,5),(2,4),(3,3),(4,2),(5,9),(6,8),(7,7),(8,6),(9,5),(10,4),(11,3),(12,2)
-    INSERT INTO @pesos2 SELECT pos + 1, peso FROM @pesos1
-    INSERT INTO @pesos2 VALUES (1,6)
+    INSERT INTO @weights1 VALUES (1,5),(2,4),(3,3),(4,2),(5,9),(6,8),(7,7),(8,6),(9,5),(10,4),(11,3),(12,2)
+    INSERT INTO @weights2 SELECT pos + 1, weight FROM @weights1
+    INSERT INTO @weights2 VALUES (1,6)
 
     WHILE @i <= 12
     BEGIN
         SET @char = SUBSTRING(@cnpj, @i, 1)
-        SET @val = CASE WHEN @char BETWEEN '0' AND '9' THEN CAST(@char AS INT)
-                       ELSE ASCII(UPPER(@char)) - 55 END
-        SELECT @soma1 += @val * peso FROM @pesos1 WHERE pos = @i
+        SET @val = CASE
+                     WHEN @char BETWEEN '0' AND '9' THEN CAST(@char AS INT)
+                     ELSE ASCII(UPPER(@char)) - 55
+                   END
+        SELECT @sum1 += @val * weight FROM @weights1 WHERE pos = @i
         SET @i += 1
     END
 
-    DECLARE @dv1 INT = CASE WHEN (@soma1 % 11) < 2 THEN 0 ELSE 11 - (@soma1 % 11) END
+    DECLARE @dv1 INT = CASE WHEN (@sum1 % 11) < 2 THEN 0 ELSE 11 - (@sum1 % 11) END
 
     SET @i = 1
     WHILE @i <= 13
     BEGIN
         SET @char = SUBSTRING(@cnpj, @i, 1)
-        SET @val = CASE WHEN @i = 13 THEN @dv1
-                        WHEN @char BETWEEN '0' AND '9' THEN CAST(@char AS INT)
-                        ELSE ASCII(UPPER(@char)) - 55 END
-        SELECT @soma2 += @val * peso FROM @pesos2 WHERE pos = @i
+        SET @val = CASE
+                     WHEN @i = 13 THEN @dv1
+                     WHEN @char BETWEEN '0' AND '9' THEN CAST(@char AS INT)
+                     ELSE ASCII(UPPER(@char)) - 55
+                   END
+        SELECT @sum2 += @val * weight FROM @weights2 WHERE pos = @i
         SET @i += 1
     END
 
-    DECLARE @dv2 INT = CASE WHEN (@soma2 % 11) < 2 THEN 0 ELSE 11 - (@soma2 % 11) END
+    DECLARE @dv2 INT = CASE WHEN (@sum2 % 11) < 2 THEN 0 ELSE 11 - (@sum2 % 11) END
 
-    RETURN CASE WHEN RIGHT(@cnpj, 2) = CAST(@dv1 AS VARCHAR) + CAST(@dv2 AS VARCHAR)
-                THEN 1 ELSE 0 END
+    RETURN CASE 
+             WHEN RIGHT(@cnpj, 2) = CAST(@dv1 AS VARCHAR) + CAST(@dv2 AS VARCHAR) THEN 1 
+             ELSE 0 
+           END
 END;
 ```
 
 ---
 
-### 🔹 8.4 Testar CNPJs no Banco
+## 🧪 5. Run Validation Queries
 
-**CNPJs válidos:**
+### ✅ Valid CNPJs
 
 ```sql
-SELECT CNPJ FROM Empresas WHERE dbo.ValidaCNPJAlfanumerico(CNPJ) = 1;
+SELECT CNPJ
+FROM Companies
+WHERE dbo.ValidateCNPJAlpha(CNPJ) = 1;
 ```
 
-**CNPJs inválidos:**
+### ❌ Invalid CNPJs
 
 ```sql
-SELECT CNPJ FROM Empresas WHERE dbo.ValidaCNPJAlfanumerico(CNPJ) = 0;
+SELECT CNPJ
+FROM Companies
+WHERE dbo.ValidateCNPJAlpha(CNPJ) = 0;
 ```
 
 ---
 
-## 📚 Conclusão
+## 🚨 6. Audit for Numeric-Type CNPJ Columns
 
-A chegada dos CNPJs alfanuméricos é uma mudança **inevitável e impactante**. Adaptar seus sistemas com **antecedência** é fundamental para:
+```sql
+SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE COLUMN_NAME LIKE '%CNPJ%' AND DATA_TYPE IN ('int', 'bigint', 'numeric');
+```
 
-✅ Evitar falhas críticas
+---
 
-✅ Garantir conformidade fiscal
+## 💡 Final Recommendations
 
-✅ Preservar a integridade dos dados
-
-✅ Manter a operação e integração fluídas
+| Action                                          | Priority    |
+| ----------------------------------------------- | ----------- |
+| Convert fields to VARCHAR(14)                   | 🔴 High     |
+| Use updated validation function                 | 🔴 High     |
+| Refactor masks and legacy triggers              | 🟡 Medium   |
+| Audit ERP / NF-e / Integration flows            | 🔴 High     |
+| Add automated test cases for alphanumeric CNPJs | 🟢 Optional |
